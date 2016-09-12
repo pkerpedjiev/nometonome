@@ -1,0 +1,7 @@
+bwa index ~/data/genomes/GCF_000005845.2_ASM584v2_genomic.fna.gz
+
+READ_LENGTH=22; zcat ~/data/genomes/GCF_000005845.2_ASM584v2_genomic.fna.gz | python scripts/generate_reads.py --read-length ${READ_LENGTH}  - > data/GCF_000005845.2_ASM584v2_genomic.${READ_LENGTH}.fastq
+BASE_NAME=GCF_000005845.2_ASM584v2_genomic; bwa aln ~/data/genomes/${BASE_NAME}.fna.gz data/${BASE_NAME}.22.fastq | bwa samse -n 10 ~/data/genomes/${BASE_NAME}.fna.gz - data/${BASE_NAME}.22.fastq > aligned/${BASE_NAME}.22.fastq.sam
+cat aligned/${BASE_NAME}.22.fastq.sam | python scripts/parse_sam.py > contacts/${BASE_NAME}.22.contacts
+
+        #bwa mem ~/data/genomes/GCF_000005845.2_ASM584v2_genomic.fna.gz data/GCF_000005845.2_ASM584v2_genomic.22.fastq > aligned/GCF_000005845.2_ASM584v2_genomic.22.fastq.sam
