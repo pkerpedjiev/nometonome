@@ -32,10 +32,12 @@ def main():
         f = open(args.fasta_file, 'r')
 
     fseq = bsio.parse(f, 'fasta')
-    for record in fseq:
-        chr_length = len(record.seq)
-        print("record.id", record.id, chr_length)
-        for i in range(args.num_reads):
+    records = list(fseq)
+    total_length = sum([len(r.seq) for r in records])
+
+    for record in records:
+        for i in range(int(args.num_reads * (len(record.seq) / total_length))):
+            chr_length = len(record.seq)
             read_start = random.randint(0, chr_length - args.read_length)
             strand = ['+','-'][random.randint(0,1)]
             read_id = record.id.split()[0] + '_' + strand + "_" + str(read_start+1)  #one-based reads
