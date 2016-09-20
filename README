@@ -4,22 +4,22 @@ workon py3
 
 #BASE_NAME=GCF_000005845.2_ASM584v2_genomic;
 #BASE_NAME=GCA_000001215.4_Release_6_plus_ISO1_MT_genomic;
-BASE_NAME=GCA_000001405.15_GRCh38_genomic;
+BASE_NAME=hg38;
 NUM_READS=100000000;
 READ_LENGTH=22; 
-zcat ~/data/genomes/${BASE_NAME}.fna.gz | python scripts/generate_reads.py --read-length ${READ_LENGTH} --num-reads ${NUM_READS}  - > data/${BASE_NAME}.${READ_LENGTH}.fastq
-bwa aln ~/data/genomes/${BASE_NAME}.fna.gz data/${BASE_NAME}.${READ_LENGTH}.fastq | bwa samse -n 10 ~/data/genomes/${BASE_NAME}.fna.gz - data/${BASE_NAME}.${READ_LENGTH}.fastq > aligned/${BASE_NAME}.${READ_LENGTH}.fastq.sam
+zcat ~/data/genomes/${BASE_NAME}.fa.gz | python scripts/generate_reads.py --read-length ${READ_LENGTH} --num-reads ${NUM_READS}  - > data/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.fastq
+bwa aln ~/data/genomes/${BASE_NAME}.fa.gz data/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.fastq | bwa samse -n 10 ~/data/genomes/${BASE_NAME}.fa.gz - data/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.fastq > aligned/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.fastq.sam
 
-cat aligned/${BASE_NAME}.${READ_LENGTH}.fastq.sam | python scripts/parse_sam.py - > contacts/${BASE_NAME}.${READ_LENGTH}.contacts
-cat contacts/${BASE_NAME}.${READ_LENGTH}.contacts | chr_pos_to_genome_pos.py -e 5 -a ${BASE_NAME} | sort -k1,1n -k2,2n > contacts/${BASE_NAME}.${READ_LENGTH}.contacts.genome
+cat aligned/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.fastq.sam | python scripts/parse_sam.py - > contacts/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.contacts
+cat contacts/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.contacts | chr_pos_to_genome_pos.py -e 5 -a ${BASE_NAME} | sort -k1,1n -k2,2n > contacts/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.contacts.genome
 
-        #bwa mem ~/data/genomes/GCF_000005845.2_ASM584v2_genomic.fna.gz data/GCF_000005845.2_ASM584v2_genomic.22.fastq > aligned/GCF_000005845.2_ASM584v2_genomic.22.fastq.sam
+        #bwa mem ~/data/genomes/GCF_000005845.2_ASM584v2_genomic.fa.gz data/GCF_000005845.2_ASM584v2_genomic.22.fastq > aligned/GCF_000005845.2_ASM584v2_genomic.22.fastq.sam
 
 AWS_ES_DOMAIN=52.23.165.123:9872
 ASSEMBLY=${BASE_NAME}
 
 workon pypy
-cat contacts/${BASE_NAME}.${READ_LENGTH}.contacts.genome | make_single_threaded_tiles.py --assembly ${BASE_NAME} -b 256 -r 1 -v 3 --elasticsearch-url 52.23.165.123:9872/hg19.1/${BASE_NAME}.${READ_LENGTH}.contacts.genome
+cat contacts/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.contacts.genome | make_single_threaded_tiles.py --assembly ${BASE_NAME} -b 256 -r 1 -v 3 --elasticsearch-url 52.23.165.123:9872/hg19.1/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.contacts.genome
 
 
 ### Display
@@ -29,7 +29,7 @@ cat contacts/${BASE_NAME}.${READ_LENGTH}.contacts.genome | make_single_threaded_
     "chromInfoPath": "//s3.amazonaws.com/pkerp/data/hg19/chromInfo.txt",
     "domain": [
       0,
-      4641652
+      3000000000
     ],
     "viewStyle": {
       "float": "left",
@@ -38,7 +38,7 @@ cat contacts/${BASE_NAME}.${READ_LENGTH}.contacts.genome | make_single_threaded_
     },
     "tracks": [
       {
-        "source": "//52.23.165.123:9872/hg19.1/GCF_000005845.2_ASM584v2_genomic.22.contacts.genome",
+        "source": "//52.23.165.123:9872/hg19.1/hg38.22.contacts.genome",
         "type": "heatmap",
         "height": 300
       }
