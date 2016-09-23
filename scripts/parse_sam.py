@@ -66,10 +66,14 @@ def main():
             continue
         else:
             parts = line.split()
-            read_id = parts[0]
-            alignment_flag = int(parts[1])
-            mapped_seq = parts[2]
-            mapped_pos = parts[3]
+            try:
+                read_id = parts[0]
+                alignment_flag = int(parts[1])
+                mapped_seq = parts[2]
+                mapped_pos = parts[3]
+            except IndexError as ie:
+                print("bad line:", line, file = sys.stderr)
+                continue
 
             if alignment_flag == 4:
                 # not aligned
