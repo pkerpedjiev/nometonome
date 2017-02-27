@@ -35,8 +35,14 @@ def main():
     records = list(fseq)
     total_length = sum([len(r.seq) for r in records])
 
+    #print("total_length:", total_length)
+    #print("num_reads:", args.num_reads)
+
     for record in records:
-        for i in range(int(args.num_reads * (len(record.seq) / total_length))):
+        #print("record:", record)
+        #print("record:", record, "to_count:", args.num_reads * len(record.seq) / total_length)
+        for i in range(int(args.num_reads * len(record.seq) / total_length)):
+            #print("i:", i)
             chr_length = len(record.seq)
             read_start = random.randint(0, chr_length - args.read_length)
             strand = ['+','-'][random.randint(0,1)]

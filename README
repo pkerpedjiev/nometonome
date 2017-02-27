@@ -1,80 +1,48 @@
 workon py3
-BASE_NAME=hg38
-NUM_READS=10000000
-NUM_DUPS=10
-RESOLUTION=256
 
-for READ_LENGTH in 16 32 64 128 256;
+## Get the chromosome sizes
+
+
+## Create the genomes
+
+GENOME=hg38
+GENOME=hg19
+GENOME=mm9
+GENOME=mm10
+GENOME=dm3
+
+mkdir -p meta/${GENOME}
+wget -P meta/${GENOME}/ http://s3.amazonaws.com/pkerp/data/hg19/chromSizes.tsv
+
+wget -P ~/Downloads http://hgdownload.cse.ucsc.edu/goldenpath/${GENOME}/bigZips/${GENOME}.2bit
+~/Downloads/twoBitToFa ~/Downloads/${GENOME}.2bit ~/data/genomes/${GENOME}.fa
+gzip ~/data/genomes/${GENOME}.fa
+bwa index ~/data/genomes/${GENOME}.fa.gz
+
+FROM_GENOME=hg19
+TO_GENOME=hg19
+
+NUM_READS=10000
+NUM_DUPS=100
+
+READ_LENGTH=32
+
+for READ_LENGTH in 32;
 do
-    FILEID=${BASE_NAME}.read_length_${READ_LENGTH}.reads_${NUM_READS}.dups_${NUM_DUPS}.res_${RESOLUTION}
-    echo "$(date) Started ${AWS_ES_DOMAIN}/hg19.1/${FILEID}.contacts.genome" >> status
-    zcat ~/data/genomes/${BASE_NAME}.fa.gz | python scripts/generate_reads.py --read-length ${READ_LENGTH} --num-reads ${NUM_READS}  - > data/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.fastq
-    echo "$(date) Intermediate... generated reads ${AWS_ES_DOMAIN}/hg19.1/${FILEID}.contacts.genome" >> status
-    bwa aln ~/data/genomes/${BASE_NAME}.fa.gz data/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.fastq | bwa samse -n ${NUM_DUPS} ~/data/genomes/${BASE_NAME}.fa.gz - data/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.fastq > aligned/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.fastq.sam
-    echo "$(date) Intermediate... aligned reads ${AWS_ES_DOMAIN}/hg19.1/${FILEID}.contacts.genome" >> status
+    FILEID=${FROM_GENOME}_${TO_GENOME}.read_length_${READ_LENGTH}.reads_${NUM_READS}.dups_${NUM_DUPS}
+    echo "$(date) Started ${FILEID}.contacts.genome" >> status
 
-    cat aligned/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.fastq.sam | python scripts/parse_sam.py - > contacts/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.contacts
-    echo "$(date) Intermediate... parsed SAM ${AWS_ES_DOMAIN}/hg19.1/${FILEID}.contacts.genome" >> status
+    zcat ~/data/genomes/${FROM_GENOME}.fa.gz | python scripts/generate_reads.py --read-length ${READ_LENGTH} --num-reads ${NUM_READS}  - > data/${FROM_GENOME}.${READ_LENGTH}.${NUM_READS}.fastq
+    echo "$(date) Intermediate... generated reads ${FILEID}.contacts.genome" >> status
+
+    bwa aln ~/data/genomes/${TO_GENOME}.fa.gz data/${FROM_GENOME}.${READ_LENGTH}.${NUM_READS}.fastq | bwa samse -n ${NUM_DUPS} ~/data/genomes/${TO_GENOME}.fa.gz - data/${FROM_GENOME}.${READ_LENGTH}.${NUM_READS}.fastq > aligned/${FROM_GENOME}.${TO_GENOME}.${READ_LENGTH}.${NUM_READS}.fastq.sam
+    echo "$(date) Intermediate... aligned reads ${FILEID}.contacts.genome" >> status
+
+    cat aligned/${FROM_GENOME}.${TO_GENOME}.${READ_LENGTH}.${NUM_READS}.fastq.sam | python scripts/parse_sam.py - ${FROM_GENOME} ${TO_GENOME} > contacts/${FROM_GENOME}.${TO_GENOME}.${READ_LENGTH}.${NUM_READS}.contacts
+    echo "$(date) Intermediate... parsed SAM ${FILEID}.contacts.genome" >> status
+
     cat contacts/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.contacts | chr_pos_to_genome_pos.py -e 5 -a ${BASE_NAME} | sort -k1,1n -k2,2n > contacts/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.contacts.genome
-    echo "$(date) Intermediate... converted SAM ${AWS_ES_DOMAIN}/hg19.1/${FILEID}.contacts.genome" >> status
+    echo "$(date) Intermediate... converted SAM ${FILEID}.contacts.genome" >> status
 
             #bwa mem ~/data/genomes/GCF_000005845.2_ASM584v2_genomic.fa.gz data/GCF_000005845.2_ASM584v2_genomic.22.fastq > aligned/GCF_000005845.2_ASM584v2_genomic.22.fastq.sam
-
-    AWS_ES_DOMAIN=54.197.186.181:9872
-    ASSEMBLY=${BASE_NAME}
-
-
-    curl -XDELETE "http://${AWS_ES_DOMAIN}/hg19.1/${FILEID}.contacts.genome/_query" -d '{
-        "query" : { 
-            "match_all" : {}
-        }
-    }'
-
-    
-
-    cat contacts/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.contacts.genome | make_single_threaded_tiles.py --assembly ${BASE_NAME} -b 256 -r ${RESOLUTION} -v 3 --elasticsearch-url ${AWS_ES_DOMAIN}/hg19.1/${FILEID}.contacts.genome
-    echo "$(date) Finished ${AWS_ES_DOMAIN}/hg19.1/${FILEID}.contacts.genome" >> status
 done;
-
-
-### Display
-
-{
- "views": [
-  {
-    "chromInfoPath": "//s3.amazonaws.com/pkerp/data/hg19/chromInfo.txt",
-    "domain": [
-      0,
-      3000000000
-    ],
-    "viewStyle": {
-      "float": "left",
-      "padding": "5px",
-      "width": "100%"
-    },
-    "tracks": [
-      {
-        "source": "//s3.amazonaws.com/pkerp/data/hg19/chromInfo.txt",
-        "type": "top-chromosome-axis",
-        "height": 25
-      },
-      {
-        "source": "//54.197.186.181:9872/hg19.1/hg38.16.1000000.10.contacts.genome",
-        "type": "heatmap",
-        "height": 300
-      },
-      {
-        "source": "//s3.amazonaws.com/pkerp/data/hg19/chromInfo.txt",
-        "type": "left-chromosome-axis",
-        "width": 25
-      },
-      {
-        "type": "left-empty",
-        "width": 5
-      }
-    ],
-    "zoomLock": 0
-  }
-],
-"editable": true
-}
