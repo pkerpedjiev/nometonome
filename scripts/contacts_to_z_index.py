@@ -63,7 +63,7 @@ def test(num):
 def main():
     parser = argparse.ArgumentParser(description="""
     
-    python contacts_to_z_index.py file.contacts
+    python contacts_to_z_index.py file.contacts from-assembly to-assembly
 """)
 
     parser.add_argument('input_file')
@@ -81,9 +81,9 @@ def main():
     from_chrominfo = nc.get_chrominfo(args.from_assembly)
     to_chrominfo = nc.get_chrominfo(args.to_assembly)
     
-    print("from_chrominfo", from_chrominfo.total_length)
+    #print("from_chrominfo", from_chrominfo.total_length)
     axis_length = max(from_chrominfo.total_length, to_chrominfo.total_length)
-    print("axis_length:", axis_length)
+    #print("axis_length:", axis_length)
 
     max_zoom = math.ceil(math.log(axis_length / (args.tile_resolution * args.bin_size)) / math.log(2))
     max_width = args.tile_resolution * args.bin_size * 2 ** max_zoom
@@ -97,7 +97,7 @@ def main():
     fout = h5py.File('/tmp/out.h5py', 'w')
     #dset = fout.create_dataset('default', (max_width,max_width), compression='gzip')
 
-    print("max_zoom:", max_zoom, max_width)
+    #print("max_zoom:", max_zoom, max_width)
     for line in f:
         parts = line.strip().split()
         chr1 = parts[0]
@@ -109,7 +109,7 @@ def main():
         genome_pos2 = nc.chr_pos_to_genome_pos(chr2, pos2, args.to_assembly)
 
         #dset[genome_pos1][genome_pos2] += 1
-        d = xy2d(max_width, genome_pos1, genome_pos2)
+        d = xy2d(max_width, int(genome_pos1), int(genome_pos2))
         (x,y) = d2xy(max_width, d)
 
         print(d, "\t", 1)

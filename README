@@ -41,6 +41,11 @@ do
     cat aligned/${FROM_GENOME}.${TO_GENOME}.${READ_LENGTH}.${NUM_READS}.fastq.sam | python scripts/parse_sam.py - ${FROM_GENOME} ${TO_GENOME} > contacts/${FROM_GENOME}.${TO_GENOME}.${READ_LENGTH}.${NUM_READS}.contacts
     echo "$(date) Intermediate... parsed SAM ${FILEID}.contacts.genome" >> status
 
+    /usr/bin/time python scripts/contacts_to_z_index.py contacts/${FROM_GENOME}.${TO_GENOME}.${READ_LENGTH}.${NUM_READS}.contacts ${FROM_GENOME} ${TO_GENOME} | sort -nk1 > zindexed/${FROM_GENOME}.${TO_GENOME}.${READ_LENGTH}.${NUM_READS}.sorted.zindexed
+
+    head -n 20 zindexed/${FROM_GENOME}.${TO_GENOME}.${READ_LENGTH}.${NUM_READS}.sorted.zindexed |    /usr/bin/time python scripts/z_index_to_aggregated_hdf5.py - ${FROM_GENOME} ${TO_GENOME}
+    /usr/bin/time python scripts/z_index_to_aggregated_hdf5.py zindexed/${FROM_GENOME}.${TO_GENOME}.${READ_LENGTH}.${NUM_READS}.sorted.zindexed ${FROM_GENOME} ${TO_GENOME}
+
     cat contacts/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.contacts | chr_pos_to_genome_pos.py -e 5 -a ${BASE_NAME} | sort -k1,1n -k2,2n > contacts/${BASE_NAME}.${READ_LENGTH}.${NUM_READS}.contacts.genome
     echo "$(date) Intermediate... converted SAM ${FILEID}.contacts.genome" >> status
 
