@@ -95,7 +95,7 @@ def main():
         f = open(args.input_file, 'r')
 
     fout = h5py.File('/tmp/out.h5py', 'w')
-    dset = fout.create_dataset('default', (max_width,max_width), compression='gzip')
+    #dset = fout.create_dataset('default', (max_width,max_width), compression='gzip')
 
     print("max_zoom:", max_zoom, max_width)
     for line in f:
@@ -108,8 +108,10 @@ def main():
         genome_pos1 = nc.chr_pos_to_genome_pos(chr1, pos1, args.from_assembly)
         genome_pos2 = nc.chr_pos_to_genome_pos(chr2, pos2, args.to_assembly)
 
-        dset[genome_pos1][genome_pos2] += 1
-        #d = xy2d(max_width, genome_pos1, genome_pos2 // args.bin_size)
+        #dset[genome_pos1][genome_pos2] += 1
+        d = xy2d(max_width, genome_pos1, genome_pos2 // args.bin_size)
+
+        print(d, "\t", 1)
 
         #assert(x == int(genome_pos1))
         #assert(y == int(genome_pos2))
