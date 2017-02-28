@@ -4,3 +4,6 @@ aligned/*
 contacts/*
 *un~
 status
+scripts/__pycache__
+zindexed/*
+*.pyc
