@@ -109,12 +109,13 @@ def main():
         genome_pos2 = nc.chr_pos_to_genome_pos(chr2, pos2, args.to_assembly)
 
         #dset[genome_pos1][genome_pos2] += 1
-        d = xy2d(max_width, genome_pos1, genome_pos2 // args.bin_size)
+        d = xy2d(max_width, genome_pos1, genome_pos2)
+        (x,y) = d2xy(max_width, d)
 
         print(d, "\t", 1)
 
-        #assert(x == int(genome_pos1))
-        #assert(y == int(genome_pos2))
+        assert(x == int(genome_pos1))
+        assert(y == int(genome_pos2))
 
 if __name__ == '__main__':
     main()
