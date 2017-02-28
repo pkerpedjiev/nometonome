@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import h5py 
 import math
 import negspy.coordinates as nc
 import random
@@ -9,13 +10,13 @@ import argparse
 #convert (x,y) to d
 def xy2d (n, x, y):
     d=0;
-    s = int(n / 2)
+    s = n // 2
     while s > 0:
         rx = (x & s) > 0
         ry = (y & s) > 0
         d += s * s * ((3 * rx) ^ ry);
         (x,y) = rot(s, x, y, rx, ry);
-        s = int(s/2)
+        s = s // 2
 
     return d;
 
@@ -25,12 +26,13 @@ def d2xy(n, d):
     x = y = 0;
     s = 1
     while s < n:
-        rx = 1 & (int(t/2));
+        rx = 1 & (t//2);
         ry = 1 & (t ^ rx);
         (x,y) = rot(s, x, y, rx, ry);
+
         x += s * rx;
         y += s * ry;
-        t = int(t / 4)
+        t = t // 4
         s *= 2
     return (x,y)
 
@@ -47,8 +49,12 @@ def rot(n, x, y, rx, ry):
     return (x,y)
 
 def test(num):
-    x = int(random.randint(0, num-1))
-    y = int(random.randint(0, num-1))
+    import random
+    import contacts_to_z_index as ctz
+    #x = int(random.randint(0, num-1))
+    #y = int(random.randint(0, num-1))
+    x = 3885975424
+    y = 1516636338 
     d = ctz.xy2d(num, x, y)
     (nx,ny) = ctz.d2xy(num, d)
     print("num:", num, "x:", x, "y:", y, "d:", d, "nx:", nx, "ny:", ny)
@@ -81,11 +87,15 @@ def main():
 
     max_zoom = math.ceil(math.log(axis_length / (args.tile_resolution * args.bin_size)) / math.log(2))
     max_width = args.tile_resolution * args.bin_size * 2 ** max_zoom
+    z_index_width = max_width // args.bin_size
 
     if args.input_file == '-':
         f = sys.stdin
     else:
         f = open(args.input_file, 'r')
+
+    fout = h5py.File('/tmp/out.h5py', 'w')
+    dset = fout.create_dataset('default', (max_width,max_width), compression='gzip')
 
     print("max_zoom:", max_zoom, max_width)
     for line in f:
@@ -98,16 +108,11 @@ def main():
         genome_pos1 = nc.chr_pos_to_genome_pos(chr1, pos1, args.from_assembly)
         genome_pos2 = nc.chr_pos_to_genome_pos(chr2, pos2, args.to_assembly)
 
-        print("gp1:", genome_pos1)
-        print("gp2:", genome_pos2)
+        dset[genome_pos1][genome_pos2] += 1
+        #d = xy2d(max_width, genome_pos1, genome_pos2 // args.bin_size)
 
-        d = xy2d(max_width, int(genome_pos1), int(genome_pos2))
-        (x,y) = d2xy(max_width, d)
-
-        print("d:", d)
-        print("x", x, "y:", y)
-        assert(x == int(genome_pos1))
-        assert(y == int(genome_pos2))
+        #assert(x == int(genome_pos1))
+        #assert(y == int(genome_pos2))
 
 if __name__ == '__main__':
     main()
