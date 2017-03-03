@@ -110,9 +110,24 @@ def main():
 
         zindex_bytes = num_to_bytes(zindex, num_bytes)
 
-        data_buffers[max_zoom] += [[zindex, value]]
+        curr_zoom = max_zoom
+        done = False
+
+        while curr_zoom >= 0 and not done:
+            if len(data_buffers[curr_zoom]) > 0 and data_buffers[curr_zoom][-1][0] == zindex:
+                # we've already encountered this index so we have to add the current value to it
+                data_buffers[curr_zoom][-1][1] += value
+                done = True
+            else:
+                data_buffers[curr_zoom] += [[zindex, value]]
+
+            zindex = zindex // 4
+            curr_zoom -= 1
+
         for i,b in enumerate(zindex_bytes):
             byte_buffers[max_zoom][i] += [b]
+
+    print("data_buffers:", data_buffers[0])
 
     for i in range(num_bytes):
         dsets[max_zoom]['bytes_' + str(i)] = byte_buffers[max_zoom][i]
