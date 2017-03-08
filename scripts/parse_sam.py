@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import print_function
+
 import pysam
 import sys
 import argparse
@@ -71,6 +73,10 @@ def main():
             try:
                 read_id = parts[0]
                 alignment_flag = int(parts[1])
+                if alignment_flag == 0:
+                    mapped_strand = '+'
+                elif alignment_flag == 16:
+                    mapped_strand = '-'
                 mapped_seq = parts[2]
                 mapped_pos = parts[3]
             except IndexError as ie:
@@ -91,8 +97,8 @@ def main():
                     alignments += parse_extra_alignments(extra_field)
 
             for (mapped_seq, mapped_pos) in alignments:
-                print("{}\t{}\t{}\t{}\t1".format(original_location[0], original_location[2],  
-                    mapped_seq, mapped_pos)) 
+                print("{}\t{}\t{}\t{}\t{}\t{}\t1".format(original_location[0], original_location[2], original_location[1],  
+                    mapped_seq, mapped_pos, mapped_strand)) 
 
 
 if __name__ == '__main__':
