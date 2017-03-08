@@ -7,3 +7,5 @@ status
 scripts/__pycache__
 zindexed/*
 *.pyc
+bins/
+coolers/
