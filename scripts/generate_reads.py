@@ -1,7 +1,9 @@
+from __future__ import print_function
 #!/usr/bin/python
 
 import Bio.SeqIO as bsio
 import gzip
+import humanfriendly
 import random
 import sys
 import argparse
@@ -18,7 +20,7 @@ def main():
     #parser.add_argument('argument', nargs=1)
     parser.add_argument('fasta_file')
     parser.add_argument('--read-length', default=22, type=int)
-    parser.add_argument('--num-reads', default=100, type=int)
+    parser.add_argument('--num-reads', default=100, type=str)
     #parser.add_argument('-o', '--options', default='yo',
     #					 help="Some option", type='str')
     #parser.add_argument('-u', '--useless', action='store_true', 
@@ -31,6 +33,10 @@ def main():
     else:
         f = open(args.fasta_file, 'r')
 
+    num_reads = humanfriendly.parse_size(args.num_reads)
+
+    print("num_reads:", num_reads, file=sys.stderr)
+
     fseq = bsio.parse(f, 'fasta')
     records = list(fseq)
     total_length = sum([len(r.seq) for r in records])
@@ -41,7 +47,7 @@ def main():
     for record in records:
         #print("record:", record)
         #print("record:", record, "to_count:", args.num_reads * len(record.seq) / total_length)
-        for i in range(int(args.num_reads * len(record.seq) / total_length)):
+        for i in range(int(num_reads * len(record.seq) / total_length)):
             #print("i:", i)
             chr_length = len(record.seq)
             read_start = random.randint(0, chr_length - args.read_length)
