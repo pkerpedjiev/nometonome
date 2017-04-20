@@ -21,6 +21,7 @@ def main():
     parser.add_argument('fasta_file')
     parser.add_argument('--read-length', default=22, type=int)
     parser.add_argument('--num-reads', default=100, type=str)
+    parser.add_argument('--sequencing-error-rate', default=0, type=float)
     #parser.add_argument('-o', '--options', default='yo',
     #					 help="Some option", type='str')
     #parser.add_argument('-u', '--useless', action='store_true', 
@@ -54,6 +55,13 @@ def main():
             strand = ['+','-'][random.randint(0,1)]
             read_id = record.id.split()[0] + '_' + strand + "_" + str(read_start+1)  #one-based reads
             read = record.seq[read_start:read_start + args.read_length]
+
+            if args.sequencing_error_rate and args.sequencing_error_rate > 0:
+                read = [r if random() > args.sequencing_error_rate else random.choice(['A','C','G','U']) for r in read]
+
+            if read.find('N') >= 0:
+                continue
+
             print('@' + read_id)
             print(read)
             print('+')
