@@ -94,8 +94,8 @@ cooler makebins \
 
 cooler csort --nproc 4 -c1 1 -p1 2 -s1 3 \
   -c2 4 -p2 5 -s2 6 \
-  ~/projects/negspy/negspy/data/${FROM_GENOME}/chromInfo.txt \
   contacts/${FILE_ID}.contacts.gz \
+  ~/projects/negspy/negspy/data/${FROM_GENOME}/chromInfo.txt \
   -o contacts/${FILE_ID}.contacts.sorted
 
 cooler cload tabix \

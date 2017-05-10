@@ -9,3 +9,4 @@ zindexed/*
 *.pyc
 bins/
 coolers/
+.DS_Store
