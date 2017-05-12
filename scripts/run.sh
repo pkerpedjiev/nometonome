@@ -78,6 +78,7 @@ bwa aln -t 4 ~/data/genomes/${TO_GENOME}.fa.gz \
     data/${FILE_ID}.fastq.gz \
     | gzip > aligned/${FILE_ID}.sam.gz
 
+exit
 
 gzcat aligned/${FILE_ID}.sam.gz \
     | python scripts/parse_sam.py - \

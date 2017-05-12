@@ -4,6 +4,7 @@ from __future__ import print_function
 import Bio.SeqIO as bsio
 import gzip
 import humanfriendly
+import numpy as np
 import random
 import sys
 import argparse
@@ -48,10 +49,13 @@ def main():
     for record in records:
         #print("record:", record)
         #print("record:", record, "to_count:", args.num_reads * len(record.seq) / total_length)
-        for i in range(int(num_reads * len(record.seq) / total_length)):
-            #print("i:", i)
-            chr_length = len(record.seq)
-            read_start = random.randint(0, chr_length - args.read_length)
+        num_reads_to_sample = int(num_reads * len(record.seq) / total_length)
+
+        chr_length = len(record.seq)
+        start_positions = [int(i) for i in np.linspace(0, chr_length - args.read_length, num_reads_to_sample)]
+        strand = '+'
+
+        for read_start in start_positions:
             strand = ['+','-'][random.randint(0,1)]
             read_id = record.id.split()[0] + '_' + strand + "_" + str(read_start+1)  #one-based reads
             read = record.seq[read_start:read_start + args.read_length]
