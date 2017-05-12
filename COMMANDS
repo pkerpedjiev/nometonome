@@ -1,0 +1,12 @@
+# calculate alignments for read lengths from 16 to 100
+
+for len in $(seq 16 2 100); do /usr/bin/time ./scripts/run.sh hg19 hg19 1M ${len} 1000 100 0; done;
+
+# Calculate the number of unique alignments
+
+for i in $(seq 16 2 100); do echo ${i} $(samtools view -Sq 37 aligned/hg19.hg19.${i}.1M.1000.0.sam.gz | wc -l); done;
+
+# copy and paste the resuling data into
+
+data/read_length_vs_number_aligned.tsv
+
