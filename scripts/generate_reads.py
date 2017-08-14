@@ -42,6 +42,7 @@ def main():
     fseq = bsio.parse(f, 'fasta')
     records = list(fseq)
     total_length = sum([len(r.seq) for r in records])
+    #print("records:", records, file=sys.stderr)
 
     #print("total_length:", total_length)
     #print("num_reads:", args.num_reads)
@@ -50,15 +51,19 @@ def main():
         #print("record:", record)
         #print("record:", record, "to_count:", args.num_reads * len(record.seq) / total_length)
         num_reads_to_sample = int(num_reads * len(record.seq) / total_length)
+        #print("num_reads_to_sample:", num_reads_to_sample, file=sys.stderr)
 
         chr_length = len(record.seq)
         start_positions = [int(i) for i in np.linspace(0, chr_length - args.read_length, num_reads_to_sample)]
         strand = '+'
 
+        #print("start_positions:", start_positions, file=sys.stderr)
+
         for read_start in start_positions:
             strand = ['+','-'][random.randint(0,1)]
             read_id = record.id.split()[0] + '_' + strand + "_" + str(read_start+1)  #one-based reads
             read = record.seq[read_start:read_start + args.read_length]
+            #print("read:", read, file=sys.stderr)
 
             if args.sequencing_error_rate and args.sequencing_error_rate > 0:
                 read = [r if random() > args.sequencing_error_rate else random.choice(['A','C','G','U']) for r in read]
@@ -66,6 +71,7 @@ def main():
             if read.find('N') >= 0:
                 continue
 
+            #print("read1:", read)
             print('@' + read_id)
             print(read)
             print('+')

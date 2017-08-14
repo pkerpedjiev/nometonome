@@ -63,6 +63,8 @@ echo "SEQUENCING_ERROR_RATE" $SEQUENCING_ERROR_RATE
 
 FILE_ID=${FROM_GENOME}.${TO_GENOME}.${READ_LENGTH}.${NUM_READS}.${NUM_DUPS}.${SEQUENCING_ERROR_RATE}
 
+echo $FILE_ID
+
 echo "$(date) Started ${FILE_ID}.contacts.genome" >> status
 
 gzcat ~/data/genomes/${FROM_GENOME}.fa.gz \
@@ -77,8 +79,6 @@ bwa aln -t 4 ~/data/genomes/${TO_GENOME}.fa.gz \
     | bwa samse -n ${NUM_DUPS} ~/data/genomes/${FROM_GENOME}.fa.gz - \
     data/${FILE_ID}.fastq.gz \
     | gzip > aligned/${FILE_ID}.sam.gz
-
-exit
 
 gzcat aligned/${FILE_ID}.sam.gz \
     | python scripts/parse_sam.py - \
@@ -99,9 +99,9 @@ cooler csort --nproc 4 -c1 1 -p1 2 -s1 3 \
   ~/projects/negspy/negspy/data/${FROM_GENOME}/chromInfo.txt \
   -o contacts/${FILE_ID}.contacts.sorted
 
-cooler cload tabix \
+cooler cload pairix \
   bins/${FROM_GENOME}.${BIN_SIZE}.bins \
   contacts/${FILE_ID}.contacts.sorted \
   coolers/${FILE_ID}.cool
 
-cooler coarsegrain coolers/${FILE_ID}.cool --no-balance
+cooler zoomify coolers/${FILE_ID}.cool --no-balance

@@ -1,6 +1,17 @@
+# Index commands
+#
+
+ASSEMBLY=hg38; gzcat ~/data/genomes/${ASSEMBLY}.fa.gz |  awk -v assembly="$ASSEMBLY" '/>/ { split($0,a,">"); print ">" assembly "_" a[2]} !/>/ { print }' > ~/data/genomes/hg38_hg19.fa
+ASSEMBLY=hg19; gzcat ~/data/genomes/${ASSEMBLY}.fa.gz |  awk -v assembly="$ASSEMBLY" '/>/ { split($0,a,">"); print ">" assembly "_" a[2]} !/>/ { print }' >> ~/data/genomes/hg38_hg19.fa
+
+grep '>' ~/data/genomes/hg38_hg19.fa
+gzip ~/data/genomes/hg38_hg19.fa
+
 # calculate alignments for read lengths from 16 to 100
 
-for len in $(seq 16 2 100); do /usr/bin/time ./scripts/run.sh hg19 hg19 1M ${len} 1000 100 0; done;
+ASSEMBLY=hg38_hg19
+
+for len in 64; do /usr/bin/time ./scripts/run.sh $ASSEMBLY $ASSEMBLY ${len} 1000 100 256 0; done;
 
 # Calculate the number of unique alignments
 
