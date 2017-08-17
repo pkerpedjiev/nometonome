@@ -74,6 +74,7 @@ gzcat ~/data/genomes/${FROM_GENOME}.fa.gz \
    | gzip > data/${FILE_ID}.fastq.gz
 echo "$(date) Intermediate... generated reads ${FILE_ID}.contacts.genome" >> status
 
+
 bwa aln -t 4 ~/data/genomes/${TO_GENOME}.fa.gz \
     data/${FILE_ID}.fastq.gz \
     | bwa samse -n ${NUM_DUPS} ~/data/genomes/${FROM_GENOME}.fa.gz - \
