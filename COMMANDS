@@ -27,8 +27,7 @@ SINGLE_ASSEMBLY=$ASSEMBLY2; cat ~/projects/negspy/negspy/data/${SINGLE_ASSEMBLY}
 SINGLE_ASSEMBLY=$ASSEMBLY3; cat ~/projects/negspy/negspy/data/${SINGLE_ASSEMBLY}/chromInfo.txt | awk -v assembly="$SINGLE_ASSEMBLY" '{print assembly "_" $1 "\t" $2}' >> ~/projects/negspy/negspy/data/${ASSEMBLY}/chromInfo.txt
 
 ASSEMBLY=hg19
-
-NUM_READS=10M; BIN_SIZE=100000;  for len in 32; do /usr/bin/time ./scripts/run.sh $ASSEMBLY $ASSEMBLY ${NUM_READS} ${len} 100 ${BIN_SIZE} 0; done;
+NUM_READS=100M; BIN_SIZE=100000;  for len in 32; do /usr/bin/time ./scripts/run.sh $ASSEMBLY $ASSEMBLY ${NUM_READS} ${len} 100 ${BIN_SIZE} 0; done;
 
 # Calculate the number of unique alignments
 
