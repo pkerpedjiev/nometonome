@@ -44,6 +44,13 @@ if [[ -z "&7" ]]; then
     exit
 fi
 
+if [[ -z "&8" ]]; then
+    echo "CHROMSIZES_FILE not provided"
+    echo "$COMMAND"
+    exit
+fi
+
+
 FROM_GENOME=$1
 TO_GENOME=$2
 NUM_READS=$3
@@ -51,6 +58,14 @@ READ_LENGTH=$4
 NUM_DUPS=$5
 BIN_SIZE=$6
 SEQUENCING_ERROR_RATE=$7
+CHROMSIZES_FILE=$8
+
+echo "SEQUENCING_ERROR_RATE:", $SEQUENCING_ERROR_RATE
+echo $4
+echo $5
+echo $6
+echo $7
+echo $8
 
 echo "FROM_GENOME:" $FROM_GENOME
 echo "TO_GENOME" $TO_GENOME
@@ -91,13 +106,13 @@ echo "$(date) Intermediate... parsed SAM ${FILE_ID}.contacts.genome" >> status
 #workon py3
 
 cooler makebins \
-  ~/projects/negspy/negspy/data/${FROM_GENOME}/chromInfo.txt \
+    ${CHROMSIZES_FILE} \
   ${BIN_SIZE} -o bins/${FROM_GENOME}.${BIN_SIZE}.bins
 
 cooler csort --nproc 4 -c1 1 -p1 2 -s1 3 \
   -c2 4 -p2 5 -s2 6 \
   contacts/${FILE_ID}.contacts.gz \
-  ~/projects/negspy/negspy/data/${FROM_GENOME}/chromInfo.txt \
+  ${CHROMSIZES_FILE}              \
   -o contacts/${FILE_ID}.contacts.sorted
 
 cooler cload pairix \
