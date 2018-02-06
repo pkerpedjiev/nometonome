@@ -38,14 +38,20 @@ if [[ -z "$6" ]]; then
     exit
 fi
 
-if [[ -z "&7" ]]; then
+if [[ -z "$7" ]]; then
     echo "SEQUENCING_ERROR_RATE not provided"
     echo "$COMMAND"
     exit
 fi
 
-if [[ -z "&8" ]]; then
+if [[ -z "$8" ]]; then
     echo "CHROMSIZES_FILE not provided"
+    echo "$COMMAND"
+    exit
+fi
+
+if [[ ! -f "$8" ]]; then
+    echo "CHROMSIZES_FILE doesn't exist: $8"
     echo "$COMMAND"
     exit
 fi
@@ -76,7 +82,7 @@ echo "BIN_SIZE" $BIN_SIZE
 echo "SEQUENCING_ERROR_RATE" $SEQUENCING_ERROR_RATE
 
 
-FILE_ID=${FROM_GENOME}.${TO_GENOME}.${READ_LENGTH}.${NUM_READS}.${NUM_DUPS}.${SEQUENCING_ERROR_RATE}
+FILE_ID=${FROM_GENOME}.${TO_GENOME}.${BIN_SIZE}.${READ_LENGTH}.${NUM_READS}.${NUM_DUPS}.${SEQUENCING_ERROR_RATE}
 
 echo $FILE_ID
 
