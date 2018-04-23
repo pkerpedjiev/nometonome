@@ -79,9 +79,11 @@ def main():
                     mapped_strand = '-'
                 mapped_seq = parts[2]
                 mapped_pos = parts[3]
+                mapq = int(parts[4])
             except IndexError as ie:
                 print("bad line:", line, file = sys.stderr)
                 continue
+
 
             if alignment_flag == 4:
                 # not aligned
@@ -89,6 +91,15 @@ def main():
 
             original_location = parse_read_id(read_id)
             alignments = [(mapped_seq, mapped_pos)]
+
+            '''
+            if mapq == 0: 
+                continue
+
+            if original_location[0] == mapped_seq and original_location[2] == mapped_pos:
+                # skip all properly aligned reads
+                continue
+            '''
 
             # look for additional alignments
             for extra_field in parts[11:]:

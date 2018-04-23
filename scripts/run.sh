@@ -88,19 +88,22 @@ echo $FILE_ID
 
 echo "$(date) Started ${FILE_ID}.contacts.genome" >> status
 
-gzcat ~/data/genomes/${FROM_GENOME}.fa.gz \
-   | python scripts/generate_reads.py \
-   --read-length ${READ_LENGTH} \
-   --num-reads ${NUM_READS}  - \
-   | gzip > data/${FILE_ID}.fastq.gz
-echo "$(date) Intermediate... generated reads ${FILE_ID}.contacts.genome" >> status
+if true; then
+    gzcat ~/data/genomes/${FROM_GENOME}.fa.gz \
+       | python scripts/generate_reads.py \
+       --read-length ${READ_LENGTH} \
+       --num-reads ${NUM_READS}  - \
+       --sequencing-error-rate 0.02 \
+       | gzip > data/${FILE_ID}.fastq.gz
+    echo "$(date) Intermediate... generated reads ${FILE_ID}.contacts.genome" >> status
 
 
-bwa aln -t 4 ~/data/genomes/${TO_GENOME}.fa.gz \
-    data/${FILE_ID}.fastq.gz \
-    | bwa samse -n ${NUM_DUPS} ~/data/genomes/${FROM_GENOME}.fa.gz - \
-    data/${FILE_ID}.fastq.gz \
-    | gzip > aligned/${FILE_ID}.sam.gz
+    bwa aln -t 4 ~/data/genomes/${TO_GENOME}.fa.gz \
+        data/${FILE_ID}.fastq.gz \
+        | bwa samse -n ${NUM_DUPS} ~/data/genomes/${FROM_GENOME}.fa.gz - \
+        data/${FILE_ID}.fastq.gz \
+        | gzip > aligned/${FILE_ID}.sam.gz
+fi
 
 gzcat aligned/${FILE_ID}.sam.gz \
     | python scripts/parse_sam.py - \

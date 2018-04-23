@@ -66,7 +66,7 @@ def main():
             #print("read:", read, file=sys.stderr)
 
             if args.sequencing_error_rate and args.sequencing_error_rate > 0:
-                read = [r if random() > args.sequencing_error_rate else random.choice(['A','C','G','U']) for r in read]
+                read = "".join([r if random.random() > args.sequencing_error_rate else random.choice(['A','C','G','U']) for r in read])
 
             if read.find('N') >= 0:
                 continue

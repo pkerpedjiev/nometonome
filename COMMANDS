@@ -1,5 +1,5 @@
 #
-NUM_DUPS=0; ASSEMBLY=hg38; BIN_SIZE=100000; LEN=32; NUM_READS=1M;  /usr/bin/time ./scripts/run.sh $ASSEMBLY $ASSEMBLY ${NUM_READS} ${LEN} ${NUM_DUPS} ${BIN_SIZE} 0 /Users/peter/projects/negspy/negspy/data/${ASSEMBLY}/chromInfo.txt 
+NUM_DUPS=0; ASSEMBLY=hg38; BIN_SIZE=100000; LEN=32; NUM_READS=10M;  /usr/bin/time ./scripts/run.sh $ASSEMBLY $ASSEMBLY ${NUM_READS} ${LEN} ${NUM_DUPS} ${BIN_SIZE} 0 /Users/peter/projects/negspy/negspy/data/${ASSEMBLY}/chromInfo.txt 
 
 python scripts/create_chrominfo.py ~/data/genomes/human_g1k_v37.fa.gz > ~/data/genomes/human_g1k_v37.full.chromSizes
 python scripts/create_chrominfo.py ~/data/genomes/human_g1k_v37.fa.gz > ~/data/genomes/human_g1k_v37.full.chromSizes
@@ -69,8 +69,8 @@ SINGLE_ASSEMBLY=$ASSEMBLY1; cat ~/projects/negspy/negspy/data/${SINGLE_ASSEMBLY}
 SINGLE_ASSEMBLY=$ASSEMBLY2; cat ~/projects/negspy/negspy/data/${SINGLE_ASSEMBLY}/chromInfo.txt | awk -v assembly="$SINGLE_ASSEMBLY" '{print assembly "_" $1 "\t" $2}' >> ~/projects/negspy/negspy/data/${ASSEMBLY}/chromInfo.txt
 SINGLE_ASSEMBLY=$ASSEMBLY3; cat ~/projects/negspy/negspy/data/${SINGLE_ASSEMBLY}/chromInfo.txt | awk -v assembly="$SINGLE_ASSEMBLY" '{print assembly "_" $1 "\t" $2}' >> ~/projects/negspy/negspy/data/${ASSEMBLY}/chromInfo.txt
 
-ASSEMBLY=hg19
-NUM_READS=100M; BIN_SIZE=100000;  for len in 32; do /usr/bin/time ./scripts/run.sh $ASSEMBLY $ASSEMBLY ${NUM_READS} ${len} 100 ${BIN_SIZE} 0; done;
+ASSEMBLY=hg38
+NUM_READS=10M; BIN_SIZE=1000;  for len in 64; do /usr/bin/time ./scripts/run.sh $ASSEMBLY $ASSEMBLY ${NUM_READS} ${len} 100 ${BIN_SIZE} 0 chromsizes/${ASSEMBLY}.chromSizes; done;
 
 # Calculate the number of unique alignments
 
@@ -88,6 +88,18 @@ echo -e "blah\t$OFFSET" > /tmp/chromSizes.tsv
 cat ~/projects/negspy/negspy/data/hg19/chromInfo.txt >> /tmp/chromSizes.tsv
 
 clodius aggregate bedfile --chromsizes-filename /tmp/chromSizes.tsv --max-per-tile 20 --importance-column 5 --output-file gene_annotations/hg19_offset_from_hg38.beddb --delimiter $'\t' ~/data/genbank-data/hg19/geneAnnotationsExonUnions.bed 
+
+## hg19 vs mm9
+
+OFFSET=$(cat ~/projects/negspy/negspy/data/hg19/chromInfo.txt | awk -F $'\t' '{s+=$2} END {print s}')
+echo -e "blah\t$OFFSET" > /tmp/chromSizes.tsv
+cat ~/projects/negspy/negspy/data/mm9/chromInfo.txt >> /tmp/chromSizes.tsv
+clodius aggregate bedfile --chromsizes-filename /tmp/chromSizes.tsv --max-per-tile 20 --importance-column 5 --output-file gene_annotations/mm9_offset_from_hg19.beddb --delimiter $'\t' ~/data/genbank-data/mm9/geneAnnotationsExonUnions.bed 
+
+
+cat ~/projects/negspy/negspy/data/hg19/chromInfo.txt > chromsizes/hg19_mm9.chromSizes
+cat ~/projects/negspy/negspy/data/mm9/chromInfo.txt >> chromsizes/hg19_mm9.chromSizes
+
 
 cp gene_annotations/hg19_offset_from_hg38.beddb ~/tmp/
 docker exec higlass-container python higlass-server/manage.py ingest_tileset --filename /tmp/hg19_offset_from_hg38.beddb --filetype beddb --datatype gene-annotation
