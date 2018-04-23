@@ -1,5 +1,5 @@
 #
-NUM_DUPS=0; ASSEMBLY=hg38; BIN_SIZE=100000; LEN=32; NUM_READS=10M;  /usr/bin/time ./scripts/run.sh $ASSEMBLY $ASSEMBLY ${NUM_READS} ${LEN} ${NUM_DUPS} ${BIN_SIZE} 0 /Users/peter/projects/negspy/negspy/data/${ASSEMBLY}/chromInfo.txt 
+NUM_DUPS=0; FROM_ASSEMBLY=hg38; TO_ASSEMBLY=mm10; BIN_SIZE=100000; LEN=32; NUM_READS=1M;  /usr/bin/time ./scripts/run.sh $FROM_ASSEMBLY $TO_ASSEMBLY ${NUM_READS} ${LEN} ${NUM_DUPS} ${BIN_SIZE} 0 /Users/peter/projects/negspy/negspy/data/${FROM_ASSEMBLY}/chromInfo.txt /Users/peter/projects/negspy/negspy/data/${TO_ASSEMBLY}/chromInfo.txt
 
 python scripts/create_chrominfo.py ~/data/genomes/human_g1k_v37.fa.gz > ~/data/genomes/human_g1k_v37.full.chromSizes
 python scripts/create_chrominfo.py ~/data/genomes/human_g1k_v37.fa.gz > ~/data/genomes/human_g1k_v37.full.chromSizes
