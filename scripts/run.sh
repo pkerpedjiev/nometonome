@@ -103,31 +103,31 @@ if true; then
         | bwa samse -n ${NUM_DUPS} ~/data/genomes/${TO_GENOME}.fa.gz - \
         data/${FILE_ID}.fastq.gz \
         | gzip > aligned/${FILE_ID}.sam.gz
-fi
 
-gzcat aligned/${FILE_ID}.sam.gz \
-    | python scripts/parse_sam.py - \
-    ${FROM_GENOME} ${TO_GENOME} \
-    | gzip > contacts/${FILE_ID}.contacts.gz
+    gzcat aligned/${FILE_ID}.sam.gz \
+        | python scripts/parse_sam.py - \
+        ${FROM_GENOME} ${TO_GENOME} \
+        | gzip > contacts/${FILE_ID}.contacts.gz
 
-echo "$(date) Intermediate... parsed SAM ${FILE_ID}.contacts.genome" >> status
-exit
+    echo "$(date) Intermediate... parsed SAM ${FILE_ID}.contacts.genome" >> status
 
 #workon py3
 
-cooler makebins \
-    ${CHROMSIZES_FILE} \
-  ${BIN_SIZE} -o bins/${FROM_GENOME}.${BIN_SIZE}.bins
+    cooler makebins \
+        ${CHROMSIZES_FILE} \
+      ${BIN_SIZE} -o bins/${FROM_GENOME}.${BIN_SIZE}.bins
 
-cooler csort --nproc 4 -c1 1 -p1 2 -s1 3 \
-  -c2 4 -p2 5 -s2 6 \
-  contacts/${FILE_ID}.contacts.gz \
-  ${CHROMSIZES_FILE}              \
-  -o contacts/${FILE_ID}.contacts.sorted
+    cooler csort --nproc 4 -c1 1 -p1 2 -s1 3 \
+      -c2 4 -p2 5 -s2 6 \
+      contacts/${FILE_ID}.contacts.gz \
+      ${CHROMSIZES_FILE}              \
+      -o contacts/${FILE_ID}.contacts.sorted
+fi
 
-cooler cload pairix \
+cooler cload pairs \
+  -c1 1 -p1 2 -c2 4 -p2 5 \
   bins/${FROM_GENOME}.${BIN_SIZE}.bins \
-  contacts/${FILE_ID}.contacts.sorted \
+  contacts/${FILE_ID}.contacts.gz \
   coolers/${FILE_ID}.cool
 
 cooler zoomify coolers/${FILE_ID}.cool --no-balance
