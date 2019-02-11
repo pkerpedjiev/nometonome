@@ -1,0 +1,34 @@
+process x {
+    output:
+        file 'x.seq.gz' into foo
+
+    """
+    shuf -i 1-1000000 | gzip > x.seq.gz
+    """
+}
+
+process y {
+    publishDir "results"
+
+    input:
+        file 'x.seq.gz' from foo
+    output:
+        file 'wc.out' into bar
+
+    """
+    gzcat x.seq.gz | wc -l > wc.out
+    """
+}
+
+process z {
+    publishDir "results"
+
+    input:
+        file 'wc.out' from bar
+    output:
+        file 'wc.out.hi'
+
+    """
+    cat wc.out > wc.out.hi
+    """
+}

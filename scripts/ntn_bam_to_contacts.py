@@ -50,8 +50,6 @@ def main():
 """)
 
     parser.add_argument('input_file', default='-')
-    parser.add_argument('from_assembly', default='hg19')
-    parser.add_argument('to_assembly', default='hg19')
     #parser.add_argument('-o', '--options', default='yo',
     #					 help="Some option", type='str')
     #parser.add_argument('-u', '--useless', action='store_true', 
@@ -108,8 +106,13 @@ def main():
                     alignments += parse_extra_alignments(extra_field)
 
             for (mapped_seq, mapped_pos) in alignments:
+                print("{}\t{}\t{}\t{}\t{}\t{}\t1".format(
+                    original_location[0], original_location[2], int(original_location[2]) + 1, 
+                    mapped_seq, mapped_pos, int(mapped_pos) + 1)) 
+                '''
                 print("{}\t{}\t{}\t{}\t{}\t{}\t1".format(original_location[0], original_location[2], original_location[1],  
                     mapped_seq, mapped_pos, mapped_strand)) 
+                '''
 
 
 if __name__ == '__main__':

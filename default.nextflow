@@ -2,10 +2,12 @@
 
 params.readLength = 32
 params.numReads = 1000000
+params.numDups = 100
+params.binSize = 100
 
 process createChromSizes1 {
     output:
-        file 'sizes1.chromsizes'
+        file 'sizes1.chromsizes' into chromsizes1
     input:
         file params.ref1
 
@@ -15,8 +17,10 @@ process createChromSizes1 {
 }
 
 process createChromSizes2 {
+    publishDir "results"
+
     output:
-        file 'sizes2.chromsizes'
+        file 'sizes2.chromsizes' into chromsizes2
     input:
         file params.ref2
 
@@ -26,17 +30,88 @@ process createChromSizes2 {
 }
 
 process generateReads {
-    publishDir "results"
-
     input:
         file params.ref1
     output:
-        file 'reads.fastq.gz'
+        file 'reads.fastq.gz' into reads
 
     """
-    cat ${params.ref1} | python scripts/generate_reads.py \
+    cat ${params.ref1} | python /Users/pkerpedjiev/projects/nometonome/scripts/generate_reads.py \
     --read-length $params.readLength \
     --num-reads $params.numReads \
-    --sequencing-error-rate 0.00 > reads.fastq.gz
+    --sequencing-error-rate 0.00 \
+    - | gzip > reads.fastq.gz
+    """
+}
+
+process createIndex {
+    publishDir "results"
+
+    input:
+        file params.ref2
+    output:
+        file 'ref2.index*' into genome_index
+
+    """
+    bwa index -p ref2.index $params.ref2
+    """
+}
+
+process alignReads {
+    publishDir "results"
+
+    input:
+        file 'reads.fastq.gz' from reads
+        file index from genome_index
+    output:
+        file 'aligned.sam.gz' into aligned
+
+    """
+    gzcat reads.fastq.gz | wc -l;
+    bwa aln -t 4 ref2.index reads.fastq.gz \
+    | bwa samse -n $params.numDups ref2.index - \
+    reads.fastq.gz | gzip > aligned.sam.gz
+    """
+}
+
+process createContacts {
+    publishDir "results"
+
+    input:
+        file 'aligned.sam.gz' from aligned
+    output:
+        file 'contacts.gz' into contacts
+
+    """
+    gzcat aligned.sam.gz | ntn_bam_to_contacts.py - \
+    | gzip > contacts.gz
+    """
+}
+
+process loadContacts {
+    publishDir "results"
+
+    input:
+        file 'contacts.gz' from contacts
+        file 'sizes2.chromsizes' from chromsizes2
+    output:
+        file 'out.cool' into coolers
+
+    """
+    cooler cload pairs -c1 1 -p1 2 -c2 4 -p2 5 sizes2.chromsizes:$params.binSize \
+    contacts.gz out.cool
+    """
+}
+
+process coolerZoomify {
+    publishDir "results"
+
+    input:
+        file 'out.cool' from coolers
+    output:
+        file 'out.mcool' into multi_coolers
+
+    """
+    cooler zoomify out.cool
     """
 }
