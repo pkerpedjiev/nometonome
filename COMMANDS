@@ -1,3 +1,8 @@
+nextflow default.nextflow --ref1 ~/data/phage/PGA_assembly.fasta --ref2 ~/data/phage/PGA_assembly.fasta
+nextflow default.nextflow --ref1 ~/data/phage/siddiqui_zymergen_42mb_scaffolded.fasta --ref2 ~/data/phage/siddiqui_zymergen_42mb_scaffolded.fasta
+
+
+
 #
 NUM_DUPS=0; FROM_ASSEMBLY=hg19; TO_ASSEMBLY=hg19; BIN_SIZE=1000; LEN=32; NUM_READS=100M;  /usr/bin/time ./scripts/run.sh $FROM_ASSEMBLY $TO_ASSEMBLY ${NUM_READS} ${LEN} ${NUM_DUPS} ${BIN_SIZE} 0 /Users/peter/projects/negspy/negspy/data/${FROM_ASSEMBLY}/chromInfo.txt /Users/peter/projects/negspy/negspy/data/${TO_ASSEMBLY}/chromInfo.txt
 

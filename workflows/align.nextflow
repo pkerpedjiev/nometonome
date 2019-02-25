@@ -1,0 +1,18 @@
+#!/usr/bin/env nextflow
+
+params.numDups = 100
+
+process alignReads {
+    publishDir "results"
+
+    input:
+        file params.readFile
+    output:
+        file 'aligned.sam.gz'
+
+    """
+    bwa aln -t 4 /Users/pkerpedjiev/data/phage/PGA_Assembly.fasta $params.readFile \
+    | bwa samse -n $params.numDups /Users/pkerpedjiev/data/phage/PGA_Assembly.fasta - \
+    $params.readFile | gzip > aligned.sam.gz
+    """
+}
