@@ -1,1 +1,119 @@
-nextflow default.nextflow --ref1 ~/data/phage/assembly1.fasta --ref2 ~/data/phage/assembly2.fasta
+nextflow default.nextflow --ref1 ~/data/phage/PGA_assembly.fasta --ref2 ~/data/phage/PGA_assembly.fasta
+nextflow default.nextflow --ref1 ~/data/phage/siddiqui_zymergen_42mb_scaffolded.fasta --ref2 ~/data/phage/siddiqui_zymergen_42mb_scaffolded.fasta
+
+
+
+#
+NUM_DUPS=0; FROM_ASSEMBLY=hg19; TO_ASSEMBLY=hg19; BIN_SIZE=1000; LEN=32; NUM_READS=100M;  /usr/bin/time ./scripts/run.sh $FROM_ASSEMBLY $TO_ASSEMBLY ${NUM_READS} ${LEN} ${NUM_DUPS} ${BIN_SIZE} 0 /Users/peter/projects/negspy/negspy/data/${FROM_ASSEMBLY}/chromInfo.txt /Users/peter/projects/negspy/negspy/data/${TO_ASSEMBLY}/chromInfo.txt
+
+
+python scripts/create_chrominfo.py ~/data/genomes/human_g1k_v37.fa.gz > ~/data/genomes/human_g1k_v37.full.chromSizes
+python scripts/create_chrominfo.py ~/data/genomes/human_g1k_v37.fa.gz > ~/data/genomes/human_g1k_v37.full.chromSizes
+
+cat ~/data/genomes/human_g1k_v37.full.chromSizes | awk '{ print $1 "\t" $NF}' > ~/data/genomes/human_g1k_v37.chromSizes
+cat ~/data/genomes/human_g1k_v37_decoy.full.chromSizes | awk '{ print $1 "\t" $NF}' > ~/data/genomes/human_g1k_v37_decoy.chromSizes
+
+NUM_DUPS=0; ASSEMBLY=human_g1k_v37; BIN_SIZE=100000; LEN=32; NUM_READS=1M;  /usr/bin/time ./scripts/run.sh $ASSEMBLY $ASSEMBLY ${NUM_READS} ${LEN} ${NUM_DUPS} ${BIN_SIZE} 0 /Users/peter/data/genomes/${ASSEMBLY}.chromSizes
+
+# the following commands are intermediates and don't necessarily need to be run
+FROM_GENOME=human_g1k_v37_decoy; BIN_SIZE=1024; FILE_ID=human_g1k_v37_decoy.human_g1k_v37_decoy.32.40M.100.0; CHROMSIZES_FILE=~/data/genomes/human_g1k_v37_decoy.chromSizes
+FROM_GENOME=human_g1k_v37; BINS_SIZE=512; FILE_ID=human_g1k_v37.human_g1k_v37.32.40M.100.0; CHROMSIZES_FILE=~/data/genomes/human_g1k_v37.chromSizes
+
+cooler csort --nproc 4 -c1 1 -p1 2 -s1 3 \
+  -c2 4 -p2 5 -s2 6 \
+  contacts/${FILE_ID}.contacts.gz \
+  ${CHROMSIZES_FILE}              \
+  -o contacts/${FILE_ID}.contacts.sorted
+
+FROM_GENOME=human_g1k_v37
+BIN_SIZE=512
+
+
+FROM_GENOME=human_g1k_v37_decoy; BIN_SIZE=100000; FILE_ID=human_g1k_v37_decoy.human_g1k_v37_decoy.32.40M.100.0; CHROMSIZES_FILE=~/data/genomes/human_g1k_v37_decoy.chromSizes
+FROM_GENOME=human_g1k_v37_decoy; BIN_SIZE=100000; FILE_ID=human_g1k_v37.human_g1k_v37.32.40M.100.0; CHROMSIZES_FILE=~/data/genomes/human_g1k_v37.chromSizes
+
+cooler cload pairix \
+  ${CHROMSIZES_FILE}:${BIN_SIZE} \
+  contacts/${FILE_ID}.contacts.sorted \
+  coolers/${FILE_ID}.cool
+
+cooler zoomify coolers/${FILE_ID}.cool --no-balance
+cp coolers/${FILE_ID}.multi.cool ~/tmp
+
+docker exec higlass-container python higlass-server/manage.py  ingest_tileset --filename /tmp/${FILE_ID}.multi.cool --filetype cooler --datatype matrix
+
+
+cp ~/data/genomes/human_g1k_v37_decoy.chromSizes ~/tmp
+docker exec higlass-container python higlass-server/manage.py  ingest_tileset --filename /tmp/human_g1k_v37_decoy.chromSizes --filetype chromsizes-tsv --datatype chromsizes
+
+# Index commands
+#
+
+ASSEMBLY1=hg19; 
+ASSEMBLY2=mm9;
+ASSEMBLY3=dm3;
+ASSEMBLY4=panTro5;
+
+ASSEMBLY=${ASSEMBLY1}_${ASSEMBLY2}_${ASSEMBLY3}_${ASSEMBLY4}
+
+gzcat ~/data/genomes/${ASSEMBLY1}.fa.gz |  awk -v assembly="$ASSEMBLY1" '/>/ { split($0,a,">"); print ">" assembly "_" a[2]} !/>/ { print }' > ~/data/genomes/${ASSEMBLY}.fa
+gzcat ~/data/genomes/${ASSEMBLY2}.fa.gz |  awk -v assembly="$ASSEMBLY2" '/>/ { split($0,a,">"); print ">" assembly "_" a[2]} !/>/ { print }' >> ~/data/genomes/${ASSEMBLY}.fa
+gzcat ~/data/genomes/${ASSEMBLY3}.fa.gz |  awk -v assembly="$ASSEMBLY3" '/>/ { split($0,a,">"); print ">" assembly "_" a[2]} !/>/ { print }' >> ~/data/genomes/${ASSEMBLY}.fa
+gzcat ~/data/genomes/${ASSEMBLY4}.fa.gz |  awk -v assembly="$ASSEMBLY4" '/>/ { split($0,a,">"); print ">" assembly "_" a[2]} !/>/ { print }' >> ~/data/genomes/${ASSEMBLY}.fa
+
+grep '>' ~/data/genomes/${ASSEMBLY}.fa
+gzip ~/data/genomes/${ASSEMBLY}.fa
+
+bwa index ~/data/genomes/${ASSEMBLY}.fa.gz
+
+# calculate alignments for read lengths from 16 to 100
+
+mkdir ~/projects/negspy/negspy/data/${ASSEMBLY}/
+
+SINGLE_ASSEMBLY=$ASSEMBLY1; cat ~/projects/negspy/negspy/data/${SINGLE_ASSEMBLY}/chromInfo.txt | awk -v assembly="$SINGLE_ASSEMBLY" '{print assembly "_" $1 "\t" $2}' > ~/projects/negspy/negspy/data/${ASSEMBLY}/chromInfo.txt
+SINGLE_ASSEMBLY=$ASSEMBLY2; cat ~/projects/negspy/negspy/data/${SINGLE_ASSEMBLY}/chromInfo.txt | awk -v assembly="$SINGLE_ASSEMBLY" '{print assembly "_" $1 "\t" $2}' >> ~/projects/negspy/negspy/data/${ASSEMBLY}/chromInfo.txt
+SINGLE_ASSEMBLY=$ASSEMBLY3; cat ~/projects/negspy/negspy/data/${SINGLE_ASSEMBLY}/chromInfo.txt | awk -v assembly="$SINGLE_ASSEMBLY" '{print assembly "_" $1 "\t" $2}' >> ~/projects/negspy/negspy/data/${ASSEMBLY}/chromInfo.txt
+
+ASSEMBLY=hg38
+NUM_READS=10M; BIN_SIZE=1000;  for len in 64; do /usr/bin/time ./scripts/run.sh $ASSEMBLY $ASSEMBLY ${NUM_READS} ${len} 100 ${BIN_SIZE} 0 chromsizes/${ASSEMBLY}.chromSizes; done;
+
+# Calculate the number of unique alignments
+
+for i in $(seq 16 2 100); do echo ${i} $(samtools view -Sq 37 aligned/hg19.hg19.${i}.1M.1000.0.sam.gz | wc -l); done;
+
+# copy and paste the resuling data into
+
+data/read_length_vs_number_aligned.tsv
+
+# create offset chromsizes
+ 
+OFFSET=$(cat ~/projects/negspy/negspy/data/hg38/chromInfo.txt | awk -F $'\t' '{s+=$2} END {print s}')
+
+echo -e "blah\t$OFFSET" > /tmp/chromSizes.tsv
+cat ~/projects/negspy/negspy/data/hg19/chromInfo.txt >> /tmp/chromSizes.tsv
+
+clodius aggregate bedfile --chromsizes-filename /tmp/chromSizes.tsv --max-per-tile 20 --importance-column 5 --output-file gene_annotations/hg19_offset_from_hg38.beddb --delimiter $'\t' ~/data/genbank-data/hg19/geneAnnotationsExonUnions.bed 
+
+## hg19 vs mm9
+
+OFFSET=$(cat ~/projects/negspy/negspy/data/hg19/chromInfo.txt | awk -F $'\t' '{s+=$2} END {print s}')
+echo -e "blah\t$OFFSET" > /tmp/chromSizes.tsv
+cat ~/projects/negspy/negspy/data/mm9/chromInfo.txt >> /tmp/chromSizes.tsv
+clodius aggregate bedfile --chromsizes-filename /tmp/chromSizes.tsv --max-per-tile 20 --importance-column 5 --output-file gene_annotations/mm9_offset_from_hg19.beddb --delimiter $'\t' ~/data/genbank-data/mm9/geneAnnotationsExonUnions.bed 
+
+
+cat ~/projects/negspy/negspy/data/hg19/chromInfo.txt > chromsizes/hg19_mm9.chromSizes
+cat ~/projects/negspy/negspy/data/mm9/chromInfo.txt >> chromsizes/hg19_mm9.chromSizes
+
+
+cp gene_annotations/hg19_offset_from_hg38.beddb ~/tmp/
+docker exec higlass-container python higlass-server/manage.py ingest_tileset --filename /tmp/hg19_offset_from_hg38.beddb --filetype beddb --datatype gene-annotation
+
+
+# haemophilus influenzae
+NUM_DUPS=100; ASSEMBLY=haemophilus_influenzae_01184; BIN_SIZE=100; LEN=22; NUM_READS=10M;  /usr/bin/time ./scripts/run.sh $ASSEMBLY $ASSEMBLY ${NUM_READS} ${LEN} ${NUM_DUPS} ${BIN_SIZE} 0 /Users/peter/Dropbox/projects/camp-lab-meeting/data/haemophilus_influenzae_01184.chromSizes
+cp coolers/haemophilus_influenzae_01184.haemophilus_influenzae_01184.22.10M.100.0.multi.cool ~/tmp
+docker exec higlass-container python higlass-server/manage.py ingest_tileset --filename /tmp/haemophilus_influenzae_01184.haemophilus_influenzae_01184.22.10M.100.0.multi.cool --filetype cooler --datatype matrix
+
+cp ~/Dropbox/projects/camp-lab-meeting/data/haemophilus_influenzae_01184.chromSizes ~/tmp
+docker exec higlass-container python higlass-server/manage.py ingest_tileset --filename /tmp/haemophilus_influenzae_01184.chromSizes --filetype chromsizes-tsv --datatype chromsizes
