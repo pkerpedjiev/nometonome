@@ -3,7 +3,7 @@
 params.readLength = 32
 params.numReads = 1000000
 params.numDups = 100
-params.binSize = 100
+params.binSize = 1000
 
 process createChromSizes1 {
     output:
@@ -88,17 +88,30 @@ process createContacts {
     """
 }
 
+process splitChromSizesID {
+    publishDir "results"
+
+    input:
+        file 'sizes2.chromsizes' from chromsizes2
+    output:
+        file 'sizes2.split.chromsizes' into split_chromsizes
+
+    '''
+    awk '{print $1 "\t" $3 }' sizes2.chromsizes > sizes2.split.chromsizes
+    '''
+}
+
 process loadContacts {
     publishDir "results"
 
     input:
         file 'contacts.gz' from contacts
-        file 'sizes2.chromsizes' from chromsizes2
+        file 'sizes2.split.chromsizes' from split_chromsizes
     output:
         file 'out.cool' into coolers
 
     """
-    cooler cload pairs -c1 1 -p1 2 -c2 4 -p2 5 sizes2.chromsizes:$params.binSize \
+    cooler cload pairs -c1 1 -p1 2 -c2 4 -p2 5 sizes2.split.chromsizes:$params.binSize \
     contacts.gz out.cool
     """
 }

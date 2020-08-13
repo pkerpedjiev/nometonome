@@ -1,3 +1,11 @@
+nextflow default.nextflow --ref1 ~/projects/prodigal-on-mce/part_9.10k.fa \
+    --ref2 ~/projects/prodigal-on-mce/part_9.10k.fa \
+    --binSize 100 \
+    --numReads 500000000
+
+
+
+nextflow default.nextflow --ref1 ~/data/phage/PGA_assembly.fasta --ref2 ~/data/phage/PGA_assembly.fasta
 nextflow default.nextflow --ref1 ~/data/phage/PGA_assembly.fasta --ref2 ~/data/phage/PGA_assembly.fasta
 nextflow default.nextflow --ref1 ~/data/phage/siddiqui_zymergen_42mb_scaffolded.fasta --ref2 ~/data/phage/siddiqui_zymergen_42mb_scaffolded.fasta
 
