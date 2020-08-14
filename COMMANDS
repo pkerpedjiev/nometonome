@@ -1,7 +1,9 @@
-nextflow default.nextflow --ref1 ~/projects/prodigal-on-mce/part_9.10k.fa \
-    --ref2 ~/projects/prodigal-on-mce/part_9.10k.fa \
-    --binSize 100 \
-    --numReads 500000000
+python scripts/run.py data/GCA_000350705.1_Esch_coli_KTE11_V1_genomic.fna0 data/GCA_002918705.1_ASM291870v1_genomic.fna
+
+./nextflow default.nextflow --ref1 data/GCA_000350705.1_Esch_coli_KTE11_V1_genomic.fna \
+    --ref2 data/GCA_002918705.1_ASM291870v1_genomic.fna \
+    --binSize 1000 \
+    --numReads 500000
 
 
 

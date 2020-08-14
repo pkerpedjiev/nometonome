@@ -30,6 +30,8 @@ process createChromSizes2 {
 }
 
 process generateReads {
+    publishDir "results"
+
     input:
         file params.ref1
     output:
