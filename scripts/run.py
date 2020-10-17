@@ -4,11 +4,12 @@ A skeleton python script which reads from an input file,
 writes to an output file and parses command line arguments
 """
 from __future__ import print_function
-import sys
+
 import argparse
 import os
 import os.path as op
 import subprocess as sp
+import sys
 
 
 def main():
@@ -40,23 +41,24 @@ def main():
     sp.call(
         f"create_chrominfo.py {args.ref2_fa} > output/sizes2.chromsizes", shell=True,
     )
-    sp.call(
-        f"cat {args.ref1_fa} | python scripts/generate_reads.py \
+
+    cmd = f"cat {args.ref1_fa} | python scripts/generate_reads.py \
         --read-length {args.read_length} \
         --num-reads {args.num_reads} \
         --sequencing-error-rate 0.00 - \
-        | gzip > output/reads/fastq.gz",
+        | gzip > output/reads/fastq.gz"
+    sp.call(cmd,
         shell=True,
     )
+
+    
+    print("running minimap2")
     sp.call(
-        f"bwa index -p output/ref2.index {args.ref2_fa}", shell=True,
-    )
-    sp.call(
-        f"bwa aln -t 4 output/ref2.index output/reads/fastq.gz \
-            | bwa samse -n {args.num_dups} output/ref2.index - \
-            output/reads/fastq.gz | gzip > output/aligned.sam.gz",
+        f"minimap2 -ax map-ont -p 0.5 -N {args.num_dups} {args.ref1_fa} output/reads/fastq.gz |  gzip > output/aligned.sam.gz",
         shell=True,
     )
+    
+
     sp.call(
         f"gzcat output/aligned.sam.gz | python scripts/ntn_bam_to_contacts.py - \
             | gzip > output/contacts.gz",
@@ -75,16 +77,19 @@ def main():
         shell=True,
     )
 
-    sp.call(
-        f"cooler cload pairs -c1 1 -p1 2 -c2 4 -p2 5 \
+    cmd = f"gzcat output/contacts.gz | cooler cload pairs -c1 1 -p1 2 -c2 4 -p2 5 \
+            --field count=7:agg=mean,dtype=float \
             output/sizes1.split.chromsizes:{args.bin_size} \
-            --bins2 output/sizes2.split.chromsizes:{args.bin_size} \
-            output/contacts.gz output/out.cool",
+            - output/out.cool"
+    print("cmd:", cmd)
+
+    sp.call(
+        cmd,
         shell=True,
     )
 
     sp.call(
-        f"cooler zoomify output/out.cool", shell=True,
+        f"cooler zoomify --field count:agg=mean,dtype=float output/out.cool", shell=True,
     )
 
 

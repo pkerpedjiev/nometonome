@@ -2,9 +2,11 @@
 
 from __future__ import print_function
 
-import pysam
-import sys
 import argparse
+import sys
+
+import pysam
+
 
 def parse_extra_alignments(extra_field):
     '''
@@ -23,8 +25,9 @@ def parse_extra_alignments(extra_field):
         seq = parts[0]
         strand = parts[1][0]
         pos = int(parts[1][1:])
+        nm = int(parts[3])
 
-        alignment_positions += [(seq, pos)]
+        alignment_positions += [(seq, pos, nm)]
         #print("extra alignment:", seq, strand, pos, file=sys.stderr)
 
     return alignment_positions
@@ -50,10 +53,11 @@ def main():
 """)
 
     parser.add_argument('input_file', default='-')
+    parser.add_argument("--read-length", default=32)
     #parser.add_argument('-o', '--options', default='yo',
-    #					 help="Some option", type='str')
+    #                    help="Some option", type='str')
     #parser.add_argument('-u', '--useless', action='store_true', 
-    #					 help='Another useless option')
+    #                    help='Another useless option')
 
     args = parser.parse_args()
 
@@ -88,34 +92,21 @@ def main():
                 continue
 
             original_location = parse_read_id(read_id)
-            alignments = [(mapped_seq, mapped_pos)]
 
-            '''
-            if mapq == 0: 
-                continue
+            nm = int(parts[11].split(':')[-1])
 
-            if original_location[0] == mapped_seq and original_location[2] == mapped_pos:
-                # skip all properly aligned reads
-                continue
-            '''
 
             # look for additional alignments
-            for extra_field in parts[11:]:
-                if extra_field[:2] == 'XA':
-                    #print('extra field:', extra_field, file=sys.stderr)
-                    alignments += parse_extra_alignments(extra_field)
+            # for extra_field in parts[11:]:
+            #     if extra_field[:2] == 'XA':
+            #         #print('extra field:', extra_field, file=sys.stderr)
+            #         alignments += parse_extra_alignments(extra_field)
 
-            for (mapped_seq, mapped_pos) in alignments:
-                print("{}\t{}\t{}\t{}\t{}\t{}\t1".format(
-                    original_location[0], original_location[2], int(original_location[2]) + 1, 
-                    mapped_seq, mapped_pos, int(mapped_pos) + 1)) 
-                '''
-                print("{}\t{}\t{}\t{}\t{}\t{}\t1".format(original_location[0], original_location[2], original_location[1],  
-                    mapped_seq, mapped_pos, mapped_strand)) 
-                '''
+            print("{}\t{}\t{}\t{}\t{}\t{}\t{}".format(
+                original_location[0], original_location[2], int(original_location[2]) + 1, 
+                mapped_seq, mapped_pos, int(mapped_pos) + 1, nm)) 
+
 
 
 if __name__ == '__main__':
     main()
-
-
