@@ -53,7 +53,7 @@ def main():
 """)
 
     parser.add_argument('input_file', default='-')
-    parser.add_argument("--read-length", default=32)
+    parser.add_argument("--read-length", type=int, default=32)
     #parser.add_argument('-o', '--options', default='yo',
     #                    help="Some option", type='str')
     #parser.add_argument('-u', '--useless', action='store_true', 
@@ -104,7 +104,7 @@ def main():
 
             print("{}\t{}\t{}\t{}\t{}\t{}\t{}".format(
                 original_location[0], original_location[2], int(original_location[2]) + 1, 
-                mapped_seq, mapped_pos, int(mapped_pos) + 1, nm)) 
+                mapped_seq, mapped_pos, int(mapped_pos) + 1, (args.read_length - nm) / args.read_length)) 
 
 
 

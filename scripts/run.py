@@ -18,9 +18,7 @@ def main():
     parser.add_argument(
         "ref1_fa", help="The first fasta",
     )
-    parser.add_argument(
-        "ref2_fa", help="The first fasta",
-    )
+
     parser.add_argument("--bin-size", default=10000)
     parser.add_argument("--num-reads", default=5000)
     parser.add_argument("--read-length", default=32)
@@ -38,9 +36,6 @@ def main():
     sp.call(
         f"create_chrominfo.py {args.ref1_fa} > output/sizes1.chromsizes", shell=True,
     )
-    sp.call(
-        f"create_chrominfo.py {args.ref2_fa} > output/sizes2.chromsizes", shell=True,
-    )
 
     cmd = f"cat {args.ref1_fa} | python scripts/generate_reads.py \
         --read-length {args.read_length} \
@@ -54,20 +49,15 @@ def main():
     
     print("running minimap2")
     sp.call(
-        f"minimap2 -ax map-ont -p 0.5 -N {args.num_dups} {args.ref1_fa} output/reads/fastq.gz |  gzip > output/aligned.sam.gz",
+        f"minimap2 -ax map-pb -P {args.ref1_fa} output/reads/fastq.gz |  gzip > output/aligned.sam.gz",
         shell=True,
     )
     
 
     sp.call(
         f"gzcat output/aligned.sam.gz | python scripts/ntn_bam_to_contacts.py - \
+            --read-length {args.read_length} \
             | gzip > output/contacts.gz",
-        shell=True,
-    )
-
-    sp.call(
-        """awk '{print $1 "\t" $NF }' output/sizes2.chromsizes \
-            > output/sizes2.split.chromsizes""",
         shell=True,
     )
 
@@ -79,6 +69,7 @@ def main():
 
     cmd = f"gzcat output/contacts.gz | cooler cload pairs -c1 1 -p1 2 -c2 4 -p2 5 \
             --field count=7:agg=mean,dtype=float \
+            --chunksize 50000000000 \
             output/sizes1.split.chromsizes:{args.bin_size} \
             - output/out.cool"
     print("cmd:", cmd)
