@@ -5,14 +5,17 @@ params.numReads = 1000000
 params.numDups = 100
 params.binSize = 100
 
+ref1 = file(params.ref1)
+ref2 = file(params.ref2)
+
 process createChromSizes1 {
     output:
         file 'sizes1.chromsizes' into chromsizes1
     input:
-        file params.ref1
+        file ref1
 
     """
-    create_chrominfo.py $params.ref1 > sizes1.chromsizes
+    create_chrominfo.py $ref1 > sizes1.chromsizes
     """
 }
 
@@ -22,21 +25,23 @@ process createChromSizes2 {
     output:
         file 'sizes2.chromsizes' into chromsizes2
     input:
-        file params.ref2
+        file ref2
 
     """
-    create_chrominfo.py $params.ref2 > sizes2.chromsizes
+    create_chrominfo.py $ref2 > sizes2.chromsizes
     """
 }
 
 process generateReads {
+    publishDir "results"
+
     input:
-        file params.ref1
+        file ref1
     output:
         file 'reads.fastq.gz' into reads
 
     """
-    cat ${params.ref1} | python /Users/pkerpedjiev/projects/nometonome/scripts/generate_reads.py \
+    cat ${ref1} | python ${baseDir}/scripts/generate_reads.py \
     --read-length $params.readLength \
     --num-reads $params.numReads \
     --sequencing-error-rate 0.00 \
@@ -48,12 +53,12 @@ process createIndex {
     publishDir "results"
 
     input:
-        file params.ref2
+        file ref2
     output:
         file 'ref2.index*' into genome_index
 
     """
-    bwa index -p ref2.index $params.ref2
+    bwa index -p ref2.index $ref2
     """
 }
 
@@ -83,7 +88,7 @@ process createContacts {
         file 'contacts.gz' into contacts
 
     """
-    gzcat aligned.sam.gz | ntn_bam_to_contacts.py - \
+    gzcat aligned.sam.gz | python ${baseDir}/scripts/ntn_bam_to_contacts.py - \
     | gzip > contacts.gz
     """
 }

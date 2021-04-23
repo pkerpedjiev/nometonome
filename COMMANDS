@@ -1,1 +1,5 @@
-nextflow default.nextflow --ref1 ~/data/phage/assembly1.fasta --ref2 ~/data/phage/assembly2.fasta
+nextflow default.nextflow --numReads 10000000 --binSize 100 --ref1 data/Musa_acuminata_pahang_v4.fasta --ref2 data/Musa_acuminata_pahang_v4.fasta
+resgen sync datasets pete "Belser... Aury 2021" output/Musa_acuminata/out.mcool
+
+nextflow default.nextflow --numReads 10000000 --binSize 100 --ref1 data/Musa_acuminata_pahang_v4.fasta --ref2 data/Mschizocarpa_chromosomes.fasta
+cp -r  results output/Mschizocarpa_chromosomes
