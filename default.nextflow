@@ -8,8 +8,77 @@ params.binSize = 100
 ref1 = file(params.ref1)
 ref2 = file(params.ref2)
 
-aligned = Channel.of(file(params.aligned))
-chromsizes2 = Channel.of(file(params.chromSizes))
+process createChromSizes1 {
+    output:
+        file 'sizes1.chromsizes' into chromsizes1
+    input:
+        file ref1
+
+    """
+    create_chrominfo.py $ref1 > sizes1.chromsizes
+    """
+}
+
+process createChromSizes2 {
+    publishDir "results"
+
+    output:
+        file 'sizes2.chromsizes' into chromsizes2
+    input:
+        file ref2
+
+    """
+    create_chrominfo.py $ref2 > sizes2.chromsizes
+    """
+}
+
+process generateReads {
+    publishDir "results"
+
+    input:
+        file ref1
+    output:
+        file 'reads.fastq.gz' into reads
+
+    """
+    cat ${ref1} | generate_reads.py \
+    --read-length $params.readLength \
+    --num-reads $params.numReads \
+    --sequencing-error-rate 0.00 \
+    - > reads.fastq
+    gzip reads.fastq
+    """
+}
+
+process createIndex {
+    publishDir "results"
+
+    input:
+        file ref2
+    output:
+        file 'ref2.index*' into genome_index
+
+    """
+    bwa index -p ref2.index $ref2
+    """
+}
+
+process alignReads {
+    publishDir "results"
+
+    input:
+        file 'reads.fastq.gz' from reads
+        file index from genome_index
+    output:
+        file 'aligned.sam.gz' into aligned
+
+    """
+    gzcat reads.fastq.gz | wc -l;
+    bwa aln -t 4 ref2.index reads.fastq.gz \
+    | bwa samse -n $params.numDups ref2.index - \
+    reads.fastq.gz | gzip > aligned.sam.gz
+    """
+}
 
 process createContacts {
     publishDir "results"
@@ -20,8 +89,8 @@ process createContacts {
         file 'contacts.gz' into contacts
 
     """
-    gzcat aligned.sam.gz | ntn_bam_to_contacts.py - > contacts;
-    gzip contacts;
+    gzcat aligned.sam.gz | ntn_bam_to_contacts.py - \
+    | gzip > contacts.gz
     """
 }
 
